@@ -4,8 +4,120 @@
 package pa9;
 
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.HashSet;
 
 class GraphTest {
 
+    @Test
+    void testAddWeightedEdge() {
+        Graph.GraphAdjacencyList graph = new Graph.GraphAdjacencyList(5);
+        graph.addWeightedEdge(0, 1, 10);
+        graph.addWeightedEdge(1, 2, 20);
+
+        assertEquals(10, graph.shortestPath(0)[1]);
+        assertEquals(30, graph.shortestPath(0)[2]);
+    }
+
+    @Test
+    void testNegativeCycleDetection() {
+        Graph.GraphAdjacencyList graph = new Graph.GraphAdjacencyList(4);
+        graph.addWeightedEdge(0, 1, 1);
+        graph.addWeightedEdge(1, 2, -1);
+        graph.addWeightedEdge(2, 3, -1);
+        graph.addWeightedEdge(3, 0, -1); // Creates a negative cycle
+
+        assertTrue(graph.hasNegativeCycle());
+    }
+
+    @Test
+    void testShortestPath() {
+        Graph.GraphAdjacencyList graph = new Graph.GraphAdjacencyList(5);
+        graph.addWeightedEdge(0, 1, 2);
+        graph.addWeightedEdge(0, 2, 4);
+        graph.addWeightedEdge(1, 2, 1);
+        graph.addWeightedEdge(1, 3, 7);
+        graph.addWeightedEdge(2, 4, 3);
+
+        int[] distances = graph.shortestPath(0);
+
+        assertArrayEquals(new int[]{0, 2, 3, 9, 6}, distances);
+    }
+
+    @Test
+    void testShortestPathUnreachableNodes() {
+        Graph.GraphAdjacencyList graph = new Graph.GraphAdjacencyList(3);
+        graph.addWeightedEdge(0, 1, 1);
+
+        int[] distances = graph.shortestPath(0);
+        assertEquals(Integer.MAX_VALUE, distances[2]); // Node 2 is unreachable
+    }
+
+    @Test
+    void testMinimumSpanningTreeKruskal() {
+        Graph.GraphAdjacencyList graph = new Graph.GraphAdjacencyList(4);
+        graph.addWeightedEdge(0, 1, 1);
+        graph.addWeightedEdge(1, 2, 2);
+        graph.addWeightedEdge(0, 2, 3);
+        graph.addWeightedEdge(2, 3, 4);
+
+        HashSet<Graph.Edge> mst = graph.minimumSpanningTree();
+
+        int totalWeight = mst.stream().mapToInt(e -> e.weight).sum();
+        assertEquals(6, totalWeight);
+        assertEquals(3, mst.size()); 
+    }
+
+    @Test
+    void testMinimumSpanningTreePrim() {
+        Graph.GraphAdjacencyList graph = new Graph.GraphAdjacencyList(4);
+        graph.addWeightedEdge(0, 1, 1);
+        graph.addWeightedEdge(1, 2, 2);
+        graph.addWeightedEdge(0, 2, 3);
+        graph.addWeightedEdge(2, 3, 4);
+
+        int[] mst = graph.minimumSpanningTreePrim();
+        assertEquals(-1, mst[0]); // Root node in MST
+        assertEquals(0, mst[1]); // Parent of node 1 is node 0
+        assertEquals(1, mst[2]); // Parent of node 2 is node 1
+        assertEquals(2, mst[3]); // Parent of node 3 is node 2
+    }
+
+    @Test
+    void testSingleNodeGraph() {
+        Graph.GraphAdjacencyList graph = new Graph.GraphAdjacencyList(1);
+        assertFalse(graph.hasNegativeCycle());
+        assertArrayEquals(new int[]{0}, graph.shortestPath(0));
+    }
+
+    @Test
+    void testEmptyGraph() {
+    Graph.GraphAdjacencyList graph = new Graph.GraphAdjacencyList(0);
+
+    // Test shortestPath on an empty graph
+    int[] shortestPath = graph.shortestPath(0);
+    assertArrayEquals(new int[] {0}, shortestPath); // Expecting default value
+
+    // HashSet<Graph.Edge> mst = graph.minimumSpanningTree();
+    // assertEquals(1, mst.size());
+    // assertTrue(mst.contains(new Graph.Edge(0, 0, 0)));
+
+    // Test minimumSpanningTreePrim on an empty graph
+    int[] mstPrim = graph.minimumSpanningTreePrim();
+    assertArrayEquals(new int[] {0}, mstPrim); // Expecting default value
+}
+
+
+    @Test
+    void testDisconnectedGraph() {
+        Graph.GraphAdjacencyList graph = new Graph.GraphAdjacencyList(5);
+        graph.addWeightedEdge(0, 1, 10);
+        graph.addWeightedEdge(3, 4, 5);
+
+        int[] distances = graph.shortestPath(0);
+        assertEquals(Integer.MAX_VALUE, distances[2]); // Node 2 is disconnected
+        assertEquals(Integer.MAX_VALUE, distances[3]); // Node 3 is disconnected
+    }
 }
